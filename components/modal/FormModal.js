@@ -8,6 +8,7 @@ import HeaderModal from './Header';
 import ContentModal from './Content';
 import InnerModal from './Inner';
 import { ResetButton, PrimaryButton } from '../button';
+import { classnames } from '../../helpers';
 
 /** @type any */
 const Modal = ({
@@ -24,6 +25,7 @@ const Modal = ({
     hasClose = true,
     displayTitle = true,
     noValidate = false,
+    hasConfirmFirst = false,
     // Destructure these options so they are not passed to the DOM.
     // eslint-disable-next-line no-unused-vars,@typescript-eslint/no-unused-vars
     disableCloseOnLocation,
@@ -57,7 +59,7 @@ function DemoModal({ onAdd, ...rest }) {
         }
 
         if (footer) {
-            return <FooterModal>{footer}</FooterModal>;
+            return <FooterModal hasConfirmFirst={hasConfirmFirst}>{footer}</FooterModal>;
         }
 
         const nodeSubmit =
@@ -69,17 +71,32 @@ function DemoModal({ onAdd, ...rest }) {
                 submit
             );
         const submitBtn = hasSubmit ? nodeSubmit : null;
+        const cancelBtn =
+            typeof close === 'string' ? (
+                <ResetButton
+                    className={classnames([hasConfirmFirst && 'button--link'])}
+                    disabled={loading}
+                    data-focus-fallback="-2"
+                >
+                    {close}
+                </ResetButton>
+            ) : (
+                close
+            );
 
         return (
-            <FooterModal>
-                {typeof close === 'string' ? (
-                    <ResetButton disabled={loading} data-focus-fallback="-2">
-                        {close}
-                    </ResetButton>
+            <FooterModal hasConfirmFirst={hasConfirmFirst}>
+                {hasConfirmFirst ? (
+                    <>
+                        {submitBtn}
+                        {cancelBtn}
+                    </>
                 ) : (
-                    close
+                    <>
+                        {cancelBtn}
+                        {submitBtn}
+                    </>
                 )}
-                {submitBtn}
             </FooterModal>
         );
     };
@@ -121,6 +138,7 @@ Modal.propTypes = {
     background: PropTypes.bool,
     hasSubmit: PropTypes.bool,
     hasClose: PropTypes.bool,
+    hasConfirmFirst: PropTypes.bool,
     disableCloseOnLocation: PropTypes.bool,
     disableCloseOnOnEscape: PropTypes.bool,
 };

@@ -16,6 +16,10 @@ const InputTwo = (props: InputTwoProps) => {
 
     const inputElement = (
         <input
+            autoComplete="off"
+            autoCapitalize="off"
+            autoCorrect="off"
+            spellCheck="false"
             {...rest}
             onChange={(e) => {
                 onValue?.(e.target.value);

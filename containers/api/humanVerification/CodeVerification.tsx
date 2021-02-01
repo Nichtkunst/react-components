@@ -23,17 +23,18 @@ const METHODS = {
 
 interface Props {
     email?: string;
+    phone?: string;
     method: 'email' | 'sms';
     mode: 'signup' | undefined;
     onSubmit: (token: string) => void;
 }
-const CodeVerification = ({ email: defaultEmail = '', mode, method, onSubmit }: Props) => {
+const CodeVerification = ({ email: defaultEmail = '', phone: defaultPhone = '', mode, method, onSubmit }: Props) => {
     const isEmailMethod = method === METHODS.EMAIL;
     const isSmsMethod = method === METHODS.SMS;
     const inputCodeRef = useRef<HTMLInputElement>(null);
     const { createNotification } = useNotifications();
     const [email, setEmail] = useState(defaultEmail);
-    const [phone, setPhone] = useState('');
+    const [phone, setPhone] = useState(defaultPhone);
     const [code, setCode] = useState('');
     const codeError = !code
         ? c('Input error').t`This field is required`

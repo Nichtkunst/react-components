@@ -17,28 +17,26 @@ const RequestNewCodeModal = ({ email, phone, onEdit, onResend, ...rest }: Props)
     return (
         <FormModal
             title={c('Title').t`Request new verification code`}
+            small
             footer={
                 <>
-                    <div className="flex flex-justify-space-between flex-nowrap on-tiny-mobile-flex-wrap w100 on-tiny-mobile-flex-column">
-                        <ResetButton className="on-mobile-flex-align-self-end on-mobile-mt3-5 on-tiny-mobile-mb1">{c(
-                            'Action'
-                        ).t`Cancel`}</ResetButton>
-                        <div className="flex on-mobile-flex-column on-mobile-ml1 on-tiny-mobile-ml0">
-                            <Button
-                                className="mr1 on-mobile-mb1"
-                                onClick={() => {
-                                    rest.onClose();
-                                    onEdit();
-                                }}
-                            >{c('Action').t`Edit`}</Button>
-                            <PrimaryButton
-                                onClick={() => {
-                                    rest.onClose();
-                                    onResend();
-                                }}
-                            >{c('Action').t`Request new code`}</PrimaryButton>
-                        </div>
-                    </div>
+                    <PrimaryButton
+                        className="button--large"
+                        onClick={() => {
+                            rest.onClose();
+                            onResend();
+                        }}
+                    >{c('Action').t`Request new code`}</PrimaryButton>
+                    <Button
+                        className="button--link"
+                        onClick={() => {
+                            rest.onClose();
+                            onEdit();
+                        }}
+                    >
+                        {email ? c('Action').t`Edit email address` : c('Action').t`Edit phone number`}
+                    </Button>
+                    <ResetButton className="button--link">{c('Action').t`Cancel`}</ResetButton>
                 </>
             }
             {...rest}

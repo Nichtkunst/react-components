@@ -13,24 +13,58 @@ interface Props {
     token: string;
     mode?: 'signup' | undefined;
     methods: HumanVerificationMethodType[];
+    defaultEmail?: string;
+    defaultPhone?: string;
 }
 
-const HumanVerificationForm = ({ methods, mode, token, onSubmit }: Props) => {
+const HumanVerificationForm = ({ defaultEmail, defaultPhone, methods, mode, token, onSubmit }: Props) => {
     const tabs = [
         methods.includes('captcha') && {
             method: 'captcha',
             title: c('Human verification method').t`CAPTCHA`,
-            content: <Captcha token={token} onSubmit={(token) => onSubmit(token, 'captcha')} />,
+            content: (
+                <>
+                    <p>{c('Info').t`To fight spam and abuse, please verify you are human.`}</p>
+                    <Captcha token={token} onSubmit={(token) => onSubmit(token, 'captcha')} />
+                </>
+            ),
         },
         methods.includes('email') && {
             method: 'email',
             title: c('Human verification method').t`Email`,
-            content: <CodeVerification mode={mode} onSubmit={(token) => onSubmit(token, 'email')} method="email" />,
+            content: (
+                <>
+                    <p>
+                        <span>{c('Info').t`Your email will only be used for this one-time verification.`}</span>
+                        <LearnMore url="https://protonmail.com/support/knowledge-base/human-verification/" />
+                    </p>
+                    <CodeVerification
+                        email={defaultEmail}
+                        mode={mode}
+                        onSubmit={(token) => onSubmit(token, 'email')}
+                        method="email"
+                    />
+                </>
+            ),
         },
         methods.includes('sms') && {
             method: 'sms',
             title: c('Human verification method').t`SMS`,
-            content: <CodeVerification mode={mode} onSubmit={(token) => onSubmit(token, 'sms')} method="sms" />,
+            content: (
+                <>
+                    <p>
+                        <span>{c('Info').t`Your phone number will only be used for this one-time verification.`} </span>
+                        <LearnMore url="https://protonmail.com/support/knowledge-base/human-verification/" />
+                    </p>
+
+                    <CodeVerification
+                        phone={defaultPhone}
+                        mode={mode}
+                        onSubmit={(token) => onSubmit(token, 'sms')}
+                        method="sms"
+                    />
+                </>
+            ),
         },
         methods.includes('invite') && {
             method: 'invite',
@@ -45,23 +79,7 @@ const HumanVerificationForm = ({ methods, mode, token, onSubmit }: Props) => {
         return <Alert type="error">{c('Human verification method').t`No verification method available`}</Alert>;
     }
 
-    return (
-        <>
-            {tabs[index] && ['email', 'sms'].includes(tabs[index].method) ? (
-                <p>
-                    <span className="mr0-5">{c('Info')
-                        .t`Your email or phone number will only be used for this one-time verification.`}</span>
-                    <LearnMore url="https://protonmail.com/support/knowledge-base/human-verification/" />
-                </p>
-            ) :
-                 mode !== 'signup' ? (
-                    <p>{c('Info').t`To fight spam and abuse, please verify you are human.`}</p>
-                )
-                : null
-            }
-            <Tabs tabs={tabs} value={index} onChange={setIndex} />
-        </>
-    );
+    return <Tabs tabs={tabs} value={index} onChange={setIndex} />;
 };
 
 export default HumanVerificationForm;

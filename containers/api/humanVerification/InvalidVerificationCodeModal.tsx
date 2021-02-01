@@ -47,6 +47,7 @@ const InvalidVerificationCodeModal = ({
                     </div>
                 </>
             }
+            small
             {...rest}
         >
             <Alert type="error">

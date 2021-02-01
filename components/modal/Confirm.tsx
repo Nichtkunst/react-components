@@ -11,6 +11,7 @@ export interface ConfirmModalProps {
     confirm?: ReactNode;
     loading?: boolean;
     small?: boolean;
+    hasConfirmFirst?: boolean;
 }
 const Confirm = ({
     onClose,

@@ -9,7 +9,14 @@ import { Href } from '../link';
 import { Loader } from '../loader';
 import { classnames } from '../../helpers';
 
-const Challenge = ({ children, style, onLoaded, bodyClassName, ...rest }: Omit<ChallengeProps, 'src'>) => {
+const Challenge = ({
+    children,
+    style,
+    onLoaded,
+    bodyClassName,
+    loaderClassName,
+    ...rest
+}: Omit<ChallengeProps, 'src'>) => {
     const [isLoading, setIsLoading] = useState(true);
     const [hasError, setHasError] = useState(false);
     const [errorRetry, setErrorRetry] = useState(0);
@@ -43,7 +50,7 @@ const Challenge = ({ children, style, onLoaded, bodyClassName, ...rest }: Omit<C
 
     return (
         <div style={style}>
-            {isLoading ? <Loader /> : null}
+            {isLoading ? <Loader className={loaderClassName} /> : null}
 
             {hasError ? (
                 <>

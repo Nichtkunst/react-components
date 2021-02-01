@@ -20,6 +20,7 @@ export interface Props
     className?: string;
     innerClassName?: string;
     bodyClassName?: string;
+    loaderClassName?: string;
     title?: string;
     type: number;
     onError?: () => void;
@@ -216,7 +217,7 @@ const ChallengeFrame = ({
                         },
                         targetOrigin
                     );
-                    window.setTimeout(() => {
+                    errorTimeoutHandle = window.setTimeout(() => {
                         reject(new Error('Challenge timeout'));
                     }, challengeTimeout);
                 });
@@ -226,6 +227,7 @@ const ChallengeFrame = ({
         window.addEventListener('message', cb);
         return () => {
             window.removeEventListener('message', cb);
+            clearTimeout(errorTimeoutHandle);
         };
     }, []);
 
@@ -238,6 +240,7 @@ const ChallengeFrame = ({
         renderEl.className = innerClassName;
         ReactDOM.render(children as any, renderEl, () => {
             normalizeSelectOptions(renderEl);
+
             contentWindow.postMessage(
                 {
                     type: 'html',

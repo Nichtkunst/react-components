@@ -16,7 +16,7 @@ interface Props {
 
 const usePayment = ({ amount, currency, onPay }: Props) => {
     const { card, setCard, errors, isValid } = useCard();
-    const [method, setMethod] = useState<PAYMENT_METHOD_TYPES | undefined>();
+    const [method, setMethod] = useState<PAYMENT_METHOD_TYPES | string | undefined>();
     const [parameters, setParameters] = useState<PaymentParameters>({});
     const isPayPalActive = method === PAYPAL;
 
@@ -51,7 +51,7 @@ const usePayment = ({ amount, currency, onPay }: Props) => {
             return false;
         }
 
-        if ([BITCOIN, CASH].includes(method)) {
+        if ([BITCOIN, CASH].includes(method as PAYMENT_METHOD_TYPES)) {
             return false;
         }
 
@@ -71,7 +71,7 @@ const usePayment = ({ amount, currency, onPay }: Props) => {
             return;
         }
 
-        if (![CARD, PAYPAL, CASH, BITCOIN].includes(method)) {
+        if (![CARD, PAYPAL, CASH, BITCOIN].includes(method as PAYMENT_METHOD_TYPES)) {
             setParameters({ PaymentMethodID: method });
         }
 
@@ -80,7 +80,7 @@ const usePayment = ({ amount, currency, onPay }: Props) => {
         }
 
         // Reset parameters when switching methods
-        if ([PAYPAL, CASH, BITCOIN].includes(method)) {
+        if ([PAYPAL, CASH, BITCOIN].includes(method as PAYMENT_METHOD_TYPES)) {
             setParameters({});
         }
     }, [method, card]);

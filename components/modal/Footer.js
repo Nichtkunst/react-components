@@ -4,7 +4,11 @@ import { classnames } from '../../helpers';
 
 const Footer = ({
     children,
-    className = 'flex flex-justify-space-between flex-align-items-center flex-nowrap',
+    hasConfirmFirst,
+    className = classnames([
+        'flex flex-nowrap',
+        hasConfirmFirst ? 'flex-column' : 'flex-justify-space-between flex-align-items-center',
+    ]),
     ...rest
 }) => {
     return (

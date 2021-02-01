@@ -4,10 +4,10 @@ import ReactIntlTelInput from 'react-intl-tel-input';
 import './styles/_intlTelInput.scss';
 import { classnames } from '../../../helpers';
 
-const IntlTelInput = ({ containerClassName, inputClassName, ...rest }) => (
+const IntlTelInput = ({ containerClassName, inputClassName, useNewFormStyle, ...rest }) => (
     <ReactIntlTelInput
         containerClassName={classnames(['intl-tel-input', containerClassName])}
-        inputClassName={classnames(['field', inputClassName])}
+        inputClassName={classnames([useNewFormStyle ? 'inputform-field' : 'field', inputClassName])}
         {...rest}
     />
 );
@@ -15,6 +15,7 @@ const IntlTelInput = ({ containerClassName, inputClassName, ...rest }) => (
 IntlTelInput.propTypes = {
     containerClassName: PropTypes.string,
     inputClassName: PropTypes.string,
+    useNewFormStyle: PropTypes?.bool,
 };
 
 export default IntlTelInput;

@@ -48,6 +48,7 @@ export * from './sidebar';
 export * from './shortcuts';
 export * from './stepDot';
 export * from './stepDots';
+export * from './switch';
 export * from './table';
 export * from './tabs';
 export * from './text';
