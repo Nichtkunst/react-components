@@ -13,7 +13,7 @@ import {
     getHasMigratedAddressKeys,
     getPrimaryKey,
 } from 'proton-shared/lib/keys';
-import { ktSaveToLS } from 'key-transparency-web-client';
+import { createKeyTransparencyVerifier } from 'proton-shared/lib/kt/createKeyTransparencyVerifier';
 
 import { useErrorHandler } from '../../hooks';
 
@@ -60,6 +60,8 @@ const AccountGenerateInternalAddressContainer = ({ onDone, api, keyPassword }: P
 
         const [Address] = await handleSetupAddress({ api, domains: availableDomains, username });
 
+        const keyTransparencyVerifier = createKeyTransparencyVerifier({ api, keyTransparencyState });
+
         if (getHasMigratedAddressKeys(addresses)) {
             const userKeys = await getDecryptedUserKeys({
                 user,
@@ -70,22 +72,22 @@ const AccountGenerateInternalAddressContainer = ({ onDone, api, keyPassword }: P
             if (!primaryUserKey) {
                 throw new Error('Missing primary user key');
             }
-            const [, , ktMessageObject] = await createAddressKeyV2({
+            await createAddressKeyV2({
                 api,
                 userKey: primaryUserKey,
                 address: Address,
                 activeKeys: [],
-                keyTransparencyState,
+                keyTransparencyVerifier: keyTransparencyVerifier.verify,
             });
 
-            await ktSaveToLS(ktMessageObject, userKeys, api);
+            await keyTransparencyVerifier.commit(userKeys);
         } else {
-            const [, , ktMessageObject] = await createAddressKeyLegacy({
+            await createAddressKeyLegacy({
                 api,
                 passphrase: keyPassword,
                 address: Address,
                 activeKeys: [],
-                keyTransparencyState,
+                keyTransparencyVerifier: keyTransparencyVerifier.verify,
             });
 
             const userKeys = await getDecryptedUserKeys({
@@ -93,7 +95,7 @@ const AccountGenerateInternalAddressContainer = ({ onDone, api, keyPassword }: P
                 userKeys: user.Keys,
                 keyPassword,
             });
-            await ktSaveToLS(ktMessageObject, userKeys, api);
+            await keyTransparencyVerifier.commit(userKeys);
         }
     };
 

@@ -5,7 +5,7 @@ import { createMember, createMemberAddress } from 'proton-shared/lib/api/members
 import { srpVerify } from 'proton-shared/lib/srp';
 import { Domain, Organization, Address, CachedOrganizationKey } from 'proton-shared/lib/interfaces';
 import { setupMemberKey } from 'proton-shared/lib/keys';
-import { ktSaveToLS } from 'key-transparency-web-client';
+import { createKeyTransparencyVerifier } from 'proton-shared/lib/kt/createKeyTransparencyVerifier';
 import { useApi, useNotifications, useEventManager, useGetAddresses } from '../../hooks';
 import { FormModal, Row, Field, Label, PasswordInput, Input, Checkbox, Select } from '../../components';
 
@@ -81,7 +81,8 @@ const MemberModal = ({ onClose, organization, organizationKey, domains, domainsA
                 throw new Error('Organization key is not decrypted');
             }
             const ownerAddresses = await getAddresses();
-            const { userPublicKeys, ktMessageObject } = await setupMemberKey({
+            const keyTransparencyVerifier = createKeyTransparencyVerifier({ api, keyTransparencyState });
+            const { userKeys } = await setupMemberKey({
                 api,
                 ownerAddresses,
                 member: Member,
@@ -89,9 +90,9 @@ const MemberModal = ({ onClose, organization, organizationKey, domains, domainsA
                 organizationKey: organizationKey.privateKey,
                 encryptionConfig: ENCRYPTION_CONFIGS[encryptionType],
                 password: model.password,
-                keyTransparencyState,
+                keyTransparencyVerifier: keyTransparencyVerifier.verify,
             });
-            await ktSaveToLS(ktMessageObject, userPublicKeys, api);
+            await keyTransparencyVerifier.commit(userKeys);
         }
     };
 

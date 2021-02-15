@@ -5,7 +5,7 @@ import { missingKeysMemberProcess, missingKeysSelfProcess } from 'proton-shared/
 import { noop } from 'proton-shared/lib/helpers/function';
 import { Address, Member, CachedOrganizationKey } from 'proton-shared/lib/interfaces';
 import { queryAddresses } from 'proton-shared/lib/api/members';
-import { ktSaveToLS } from 'key-transparency-web-client';
+import { createKeyTransparencyVerifier } from 'proton-shared/lib/kt/createKeyTransparencyVerifier';
 
 import { FormModal, Alert, Table, TableHeader, TableBody, TableRow } from '../../../components';
 import {
@@ -79,7 +79,8 @@ const CreateMissingKeysAddressModal = ({ onClose, member, addressesToGenerate, o
             ({ Addresses }) => Addresses
         );
         try {
-            const addresses = await getAddresses();
+            const [userKeys, addresses] = await Promise.all([getUserKeys(), getAddresses()]);
+            const keyTransparencyVerifier = createKeyTransparencyVerifier({ api, keyTransparencyState });
 
             await missingKeysMemberProcess({
                 api,
@@ -99,7 +100,9 @@ const CreateMissingKeysAddressModal = ({ onClose, member, addressesToGenerate, o
                     });
                 },
                 organizationKey: organizationKey.privateKey,
+                keyTransparencyVerifier: keyTransparencyVerifier.verify,
             });
+            await keyTransparencyVerifier.commit(userKeys);
             await call();
         } catch (e) {
             createNotification({ text: e.message });
@@ -108,7 +111,8 @@ const CreateMissingKeysAddressModal = ({ onClose, member, addressesToGenerate, o
 
     const processSelf = async () => {
         const [userKeys, addresses] = await Promise.all([getUserKeys(), getAddresses()]);
-        const ktMessageObjects = await missingKeysSelfProcess({
+        const keyTransparencyVerifier = createKeyTransparencyVerifier({ api, keyTransparencyState });
+        await missingKeysSelfProcess({
             api,
             userKeys,
             addresses,
@@ -125,14 +129,9 @@ const CreateMissingKeysAddressModal = ({ onClose, member, addressesToGenerate, o
                     });
                 });
             },
-            keyTransparencyState,
+            keyTransparencyVerifier: keyTransparencyVerifier.verify,
         });
-        for (let i = 0; i < ktMessageObjects.length; i++) {
-            const ktMessageObject = ktMessageObjects[i];
-            if (ktMessageObject) {
-                await ktSaveToLS(ktMessageObject, userKeys, api);
-            }
-        }
+        await keyTransparencyVerifier.commit(userKeys);
         await call();
     };
 

@@ -1,5 +1,5 @@
 import { useMemo, useRef, useState } from 'react';
-import { getKeys } from 'pmcrypto';
+import { getKeys, OpenPGPKey } from 'pmcrypto';
 import { AUTH_VERSION } from 'pm-srp';
 import { c } from 'ttag';
 import { srpVerify } from 'proton-shared/lib/srp';
@@ -8,6 +8,7 @@ import { auth2FA, getInfo, revoke } from 'proton-shared/lib/api/auth';
 import {
     Address as tsAddress,
     Api,
+    DecryptedKey,
     KeySalt as tsKeySalt,
     Member as tsMember,
     User as tsUser,
@@ -26,7 +27,7 @@ import { getHasV2KeysToUpgrade, upgradeV2KeysHelper } from 'proton-shared/lib/ke
 import { traceError } from 'proton-shared/lib/helpers/sentry';
 import { getMember } from 'proton-shared/lib/api/members';
 import { getApiErrorMessage } from 'proton-shared/lib/api/helpers/apiErrorHelper';
-import { ktSaveToLS } from 'key-transparency-web-client';
+import { createKeyTransparencyVerifier } from 'proton-shared/lib/kt/createKeyTransparencyVerifier';
 
 import { getAuthTypes, handleUnlockKey } from './helper';
 import handleSetupAddressKeys from './handleSetupAddressKeys';
@@ -135,7 +136,8 @@ const useLogin = ({ api, onLogin, ignoreUnlock, hasGenerateKeys = false }: Props
         ]);
 
         if (Addresses && getHasV2KeysToUpgrade(User, Addresses)) {
-            const { newKeyPassword, ktMessageObjects } = await upgradeV2KeysHelper({
+            const keyTransparencyVerifier = createKeyTransparencyVerifier({ api, keyTransparencyState });
+            const newKeyPassword = await upgradeV2KeysHelper({
                 user: User,
                 addresses: Addresses,
                 loginPassword,
@@ -143,27 +145,23 @@ const useLogin = ({ api, onLogin, ignoreUnlock, hasGenerateKeys = false }: Props
                 clearKeyPassword,
                 isOnePasswordMode,
                 api: authApi,
-                keyTransparencyState,
+                keyTransparencyVerifier: keyTransparencyVerifier.verify,
             }).catch((e) => {
                 traceError(e);
-                return { newKeyPassword: undefined, ktMessageObjects: undefined };
+                return undefined;
             });
-            if (ktMessageObjects !== undefined) {
-                // Prepare keys
-                const userPublicKeys = await Promise.all(
-                    User.Keys.map(async ({ PublicKey }) => {
-                        const [publicKey] = await getKeys(PublicKey);
-                        return {
-                            publicKey,
-                        };
-                    })
-                );
-                await Promise.all(
-                    ktMessageObjects.map(async (ktMessageObject) => {
-                        ktSaveToLS(ktMessageObject, userPublicKeys, api);
-                    })
-                );
-            }
+            // Prepare keys
+            const userKeys: DecryptedKey[] = await Promise.all(
+                User.Keys.map(async ({ PrivateKey }) => {
+                    const [privateKey] = await getKeys(PrivateKey);
+                    return {
+                        ID: privateKey.getKeyId(),
+                        privateKey,
+                        publicKey: privateKey.toPublic() as OpenPGPKey,
+                    };
+                })
+            );
+            await keyTransparencyVerifier.commit(userKeys);
             if (newKeyPassword !== undefined) {
                 return finalizeLogin({
                     loginPassword,
