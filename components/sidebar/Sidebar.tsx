@@ -20,10 +20,20 @@ interface Props {
     primary?: ReactNode;
     children?: ReactNode;
     version?: ReactNode;
+    kt?: ReactNode;
     hasAppLinks?: boolean;
 }
 
-const Sidebar = ({ expanded = false, onToggleExpand, hasAppLinks = true, logo, primary, children, version }: Props) => {
+const Sidebar = ({
+    expanded = false,
+    onToggleExpand,
+    hasAppLinks = true,
+    logo,
+    primary,
+    children,
+    kt,
+    version,
+}: Props) => {
     const rootRef = useRef<HTMLDivElement>(null);
     const focusTrapProps = useFocusTrap({
         active: expanded,
@@ -94,6 +104,7 @@ const Sidebar = ({ expanded = false, onToggleExpand, hasAppLinks = true, logo, p
                     <Meter variant="thin" className="mb0-5 w70" value={spacePercentage} />
                 </div>
             ) : null}
+            {kt}
             {version}
             {hasAppLinks ? <MobileAppsLinks /> : null}
         </div>

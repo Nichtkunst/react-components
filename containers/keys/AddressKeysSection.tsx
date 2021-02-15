@@ -9,6 +9,7 @@ import {
     addAddressKeysProcess,
     setAddressKeyFlags,
 } from 'proton-shared/lib/keys';
+import { KTError, ktSaveToLS } from 'key-transparency-web-client';
 
 import { Alert, Block, Loader, PrimaryButton, Select } from '../../components';
 import {
@@ -18,6 +19,7 @@ import {
     useAuthentication,
     useEventManager,
     useModals,
+    useNotifications,
     useUser,
     useUserKeys,
 } from '../../hooks';
@@ -36,6 +38,7 @@ import { getNewKeyFlags } from './shared/flags';
 import { FlagAction } from './shared/interface';
 import { KeyReactivationRequest } from './reactivateKeys/interface';
 import { getKeyByID } from './shared/helper';
+import useKeyTransparency from '../kt/useKeyTransparency';
 
 const AddressKeysSection = () => {
     const { createModal } = useModals();
@@ -48,6 +51,8 @@ const AddressKeysSection = () => {
     const [addressesKeys, loadingAddressesKeys] = useAddressesKeys();
     const [loadingKeyID, setLoadingKeyID] = useState<string>('');
     const [addressIndex, setAddressIndex] = useState(() => (Array.isArray(Addresses) ? 0 : -1));
+    const keyTransparencyState = useKeyTransparency();
+    const { createNotification } = useNotifications();
 
     const Address = Addresses ? Addresses[addressIndex] : undefined;
     const { ID: addressID = '', Email: addressEmail = '' } = Address || {};
@@ -91,8 +96,18 @@ const AddressKeysSection = () => {
 
         try {
             setLoadingKeyID(ID);
-            await setPrimaryAddressKey(api, Address, addressKeys, ID);
+            const ktMessageObject = await setPrimaryAddressKey(api, Address, addressKeys, ID, keyTransparencyState);
+            await ktSaveToLS(ktMessageObject, userKeys, api);
             await call();
+        } catch (error) {
+            if (error instanceof KTError) {
+                createNotification({
+                    type: 'error',
+                    text: c('Error').t`Key Transparency self-audit failed`,
+                });
+            } else {
+                throw error;
+            }
         } finally {
             setLoadingKeyID('');
         }
@@ -110,14 +125,25 @@ const AddressKeysSection = () => {
 
         try {
             setLoadingKeyID(ID);
-            await setAddressKeyFlags(
+            const ktMessageObject = await setAddressKeyFlags(
                 api,
                 Address,
                 addressKeys,
                 ID,
-                getNewKeyFlags(addressDisplayKey.flags, flagAction)
+                getNewKeyFlags(addressDisplayKey.flags, flagAction),
+                keyTransparencyState
             );
+            await ktSaveToLS(ktMessageObject, userKeys, api);
             await call();
+        } catch (error) {
+            if (error instanceof KTError) {
+                createNotification({
+                    type: 'error',
+                    text: c('Error').t`Key Transparency self-audit failed`,
+                });
+            } else {
+                throw error;
+            }
         } finally {
             setLoadingKeyID('');
         }
@@ -141,7 +167,8 @@ const AddressKeysSection = () => {
         const privateKey = addressKey?.privateKey;
 
         const onDelete = async (): Promise<void> => {
-            await deleteAddressKey(api, Address, addressKeys, ID);
+            const ktMessageObject = await deleteAddressKey(api, Address, addressKeys, ID, keyTransparencyState);
+            await ktSaveToLS(ktMessageObject, userKeys, api);
             await call();
         };
 
@@ -183,7 +210,7 @@ const AddressKeysSection = () => {
             <AddKeyModal
                 existingAlgorithms={existingAlgorithms}
                 onAdd={async (encryptionConfig) => {
-                    const [newKey] = await addAddressKeysProcess({
+                    const [newKey, , ktMessageObject] = await addAddressKeysProcess({
                         api,
                         userKeys,
                         encryptionConfig,
@@ -191,7 +218,9 @@ const AddressKeysSection = () => {
                         address: Address,
                         addressKeys,
                         keyPassword: authentication.getPassword(),
+                        keyTransparencyState,
                     });
+                    await ktSaveToLS(ktMessageObject, userKeys, api);
                     await call();
                     return newKey.fingerprint;
                 }}
@@ -209,7 +238,7 @@ const AddressKeysSection = () => {
         createModal(
             <ImportKeyModal
                 onProcess={async (keyImportRecords, cb) => {
-                    await importKeysProcess({
+                    const ktMessageObject = await importKeysProcess({
                         api,
                         address: Address,
                         addressKeys,
@@ -218,7 +247,9 @@ const AddressKeysSection = () => {
                         keyImportRecords,
                         keyPassword: authentication.getPassword(),
                         onImport: cb,
+                        keyTransparencyState,
                     });
+                    await ktSaveToLS(ktMessageObject, userKeys, api);
                     return call();
                 }}
             />
@@ -259,7 +290,7 @@ const AddressKeysSection = () => {
             <ReactivateKeysModal
                 keyReactivationRequests={keyReactivationRequests}
                 onProcess={async (keyReactivationRecords, oldPassword, onReactivation) => {
-                    await reactivateKeysProcess({
+                    const ktMessageObjects = await reactivateKeysProcess({
                         api,
                         user: User,
                         userKeys,
@@ -267,7 +298,13 @@ const AddressKeysSection = () => {
                         keyReactivationRecords,
                         keyPassword: authentication.getPassword(),
                         onReactivation,
+                        keyTransparencyState,
                     });
+                    await Promise.all(
+                        ktMessageObjects.map(async (ktMessageObject) => {
+                            ktSaveToLS(ktMessageObject, userKeys, api);
+                        })
+                    );
                     return call();
                 }}
             />
