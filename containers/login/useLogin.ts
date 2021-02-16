@@ -1,5 +1,4 @@
 import { useMemo, useRef, useState } from 'react';
-import { getKeys, OpenPGPKey } from 'pmcrypto';
 import { AUTH_VERSION } from 'pm-srp';
 import { c } from 'ttag';
 import { srpVerify } from 'proton-shared/lib/srp';
@@ -8,7 +7,6 @@ import { auth2FA, getInfo, revoke } from 'proton-shared/lib/api/auth';
 import {
     Address as tsAddress,
     Api,
-    DecryptedKey,
     KeySalt as tsKeySalt,
     Member as tsMember,
     User as tsUser,
@@ -137,7 +135,7 @@ const useLogin = ({ api, onLogin, ignoreUnlock, hasGenerateKeys = false }: Props
 
         if (Addresses && getHasV2KeysToUpgrade(User, Addresses)) {
             const keyTransparencyVerifier = createKeyTransparencyVerifier({ api, keyTransparencyState });
-            const newKeyPassword = await upgradeV2KeysHelper({
+            const keyUpgradeResult = await upgradeV2KeysHelper({
                 user: User,
                 addresses: Addresses,
                 loginPassword,
@@ -150,27 +148,18 @@ const useLogin = ({ api, onLogin, ignoreUnlock, hasGenerateKeys = false }: Props
                 traceError(e);
                 return undefined;
             });
-            // Prepare keys
-            const userKeys: DecryptedKey[] = await Promise.all(
-                User.Keys.map(async ({ PrivateKey }) => {
-                    const [privateKey] = await getKeys(PrivateKey);
-                    return {
-                        ID: privateKey.getKeyId(),
-                        privateKey,
-                        publicKey: privateKey.toPublic() as OpenPGPKey,
-                    };
-                })
-            );
-            await keyTransparencyVerifier.commit(userKeys);
-            if (newKeyPassword !== undefined) {
-                return finalizeLogin({
-                    loginPassword,
-                    keyPassword: newKeyPassword,
-                    // undefined user and addresses to trigger a refresh
-                    user: undefined,
-                    addresses: undefined,
-                });
+            if (!keyUpgradeResult) {
+                return;
             }
+            const [newKeyPassword, userKeyPairs] = keyUpgradeResult;
+            await keyTransparencyVerifier.commit(userKeyPairs);
+            return finalizeLogin({
+                loginPassword,
+                keyPassword: newKeyPassword,
+                // undefined user and addresses to trigger a refresh
+                user: undefined,
+                addresses: undefined,
+            });
         }
 
         return finalizeLogin({
