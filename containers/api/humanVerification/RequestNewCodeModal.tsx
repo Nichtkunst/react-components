@@ -1,54 +1,61 @@
 import React from 'react';
 import { c } from 'ttag';
 
-import { FormModal, PrimaryButton, Button, ResetButton } from '../../../components';
+import { FormModal, Button } from '../../../components';
+import { useLoading } from '../../../hooks';
+import { VerificationModel } from './interface';
 
 interface Props {
-    email?: string;
-    phone?: string;
+    verificationModel: VerificationModel;
     onEdit: () => void;
-    onResend: () => void;
+    onResend: () => Promise<void>;
+
     [key: string]: any;
 }
 
-const RequestNewCodeModal = ({ email, phone, onEdit, onResend, ...rest }: Props) => {
-    const strongEmail = <strong key="email">{email}</strong>;
-    const strongPhone = <strong key="phone">{phone}</strong>;
+const RequestNewCodeModal = ({ verificationModel, onEdit, onResend, ...rest }: Props) => {
+    const strong = <strong key="email">{verificationModel.value}</strong>;
+    const [loading, withLoading] = useLoading();
     return (
         <FormModal
             title={c('Title').t`Request new verification code`}
             small
-            footer={
-                <>
-                    <PrimaryButton
-                        className="button--large"
-                        onClick={() => {
-                            rest.onClose();
-                            onResend();
-                        }}
-                    >{c('Action').t`Request new code`}</PrimaryButton>
-                    <Button
-                        className="button--link"
-                        onClick={() => {
-                            rest.onClose();
-                            onEdit();
-                        }}
-                    >
-                        {email ? c('Action').t`Edit email address` : c('Action').t`Edit phone number`}
-                    </Button>
-                    <ResetButton className="button--link">{c('Action').t`Cancel`}</ResetButton>
-                </>
+            hasConfirmFirst
+            submit={
+                <Button
+                    size="large"
+                    color="norm"
+                    type="button"
+                    className="w100"
+                    loading={loading}
+                    onClick={async () => {
+                        await withLoading(onResend());
+                        rest.onClose?.();
+                    }}
+                >{c('Action').t`Request new code`}</Button>
+            }
+            close={
+                <Button
+                    size="large"
+                    color="weak"
+                    type="button"
+                    onClick={() => {
+                        rest.onClose?.();
+                        onEdit();
+                    }}
+                >
+                    {verificationModel.method === 'email'
+                        ? c('Action').t`Edit email address`
+                        : c('Action').t`Edit phone number`}
+                </Button>
             }
             {...rest}
         >
-            {email ? (
-                <p>{c('Info')
-                    .jt`Click "Request new code" to have a new verification code sent to ${strongEmail}. If this email address is incorrect, click "Edit" to correct it.`}</p>
-            ) : null}
-            {phone ? (
-                <p>{c('Info')
-                    .jt`Click "Request new code" to have a new verification code sent to ${strongPhone}. If this phone number is incorrect, click "Edit" to correct it.`}</p>
-            ) : null}
+            {verificationModel.method === 'email'
+                ? c('Info')
+                      .jt`Click "Request new code" to have a new verification code sent to ${strong}. If this email address is incorrect, click "Edit" to correct it.`
+                : c('Info')
+                      .jt`Click "Request new code" to have a new verification code sent to ${strong}. If this phone number is incorrect, click "Edit" to correct it.`}
         </FormModal>
     );
 };

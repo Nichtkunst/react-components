@@ -1,14 +1,16 @@
 import React from 'react';
 import { c } from 'ttag';
-import { FormModal, ResetButton, Button, PrimaryButton, Alert } from '../../../components';
+import { FormModal, Button } from '../../../components';
+import { useLoading } from '../../../hooks';
 
 interface Props {
     edit?: string;
     request?: string;
     onEdit: () => void;
-    onResend: () => void;
+    onResend: () => Promise<void>;
     onClose?: () => void;
 }
+
 const InvalidVerificationCodeModal = ({
     onEdit,
     onResend,
@@ -16,44 +18,46 @@ const InvalidVerificationCodeModal = ({
     request = c('Action').t`Request new code`,
     ...rest
 }: Props) => {
+    const [loading, withLoading] = useLoading();
     return (
         <FormModal
+            loading={loading}
             title={c('Title').t`Invalid verification code`}
-            footer={
-                <>
-                    <div className="flex flex-justify-space-between flex-nowrap on-tiny-mobile-flex-wrap w100 on-tiny-mobile-flex-column">
-                        <ResetButton className="on-mobile-flex-align-self-end on-mobile-mt3-5 on-tiny-mobile-mb1">{c(
-                            'Action'
-                        ).t`Cancel`}</ResetButton>
-                        <div className="flex on-mobile-flex-column on-mobile-ml1 on-tiny-mobile-ml0">
-                            <Button
-                                className="mr1 on-mobile-mb1"
-                                onClick={() => {
-                                    rest.onClose?.();
-                                    onEdit();
-                                }}
-                            >
-                                {edit}
-                            </Button>
-                            <PrimaryButton
-                                onClick={() => {
-                                    rest.onClose?.();
-                                    onResend();
-                                }}
-                            >
-                                {request}
-                            </PrimaryButton>
-                        </div>
-                    </div>
-                </>
-            }
             small
+            hasConfirmFirst
+            submit={
+                <Button
+                    size="large"
+                    color="norm"
+                    type="button"
+                    className="w100"
+                    loading={loading}
+                    onClick={async () => {
+                        await withLoading(onResend());
+                        rest.onClose?.();
+                    }}
+                >
+                    {request}
+                </Button>
+            }
+            close={
+                <Button
+                    size="large"
+                    color="weak"
+                    type="button"
+                    className="w100"
+                    loading={loading}
+                    onClick={async () => {
+                        rest.onClose?.();
+                        onEdit();
+                    }}
+                >
+                    {edit}
+                </Button>
+            }
             {...rest}
         >
-            <Alert type="error">
-                {c('Info')
-                    .t`Would you like to receive a new verification code or use an alternative verification method?`}
-            </Alert>
+            {c('Info').t`Would you like to receive a new verification code or use an alternative verification method?`}
         </FormModal>
     );
 };

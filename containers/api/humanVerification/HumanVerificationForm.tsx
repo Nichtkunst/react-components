@@ -1,23 +1,73 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { c } from 'ttag';
 import isTruthy from 'proton-shared/lib/helpers/isTruthy';
 import { HumanVerificationMethodType } from 'proton-shared/lib/interfaces';
+import { API_CUSTOM_ERROR_CODES } from 'proton-shared/lib/errors';
 
 import { Alert, LearnMore, Tabs } from '../../../components';
 import Captcha from './Captcha';
-import CodeVerification from './CodeVerification';
 import RequestInvite from './RequestInvite';
+import EmailMethodForm from './EmailMethodForm';
+import useApi from '../../../hooks/useApi';
+import PhoneMethodForm from './PhoneMethodForm';
+import { useModals, useNotifications } from '../../../hooks';
+import { VerificationModel } from './interface';
+import { getRoute } from './helper';
+import InvalidVerificationCodeModal from './InvalidVerificationCodeModal';
+import VerifyCodeForm from './VerifyCodeForm';
+import RequestNewCodeModal from './RequestNewCodeModal';
 
 interface Props {
     onSubmit: (token: string, tokenType: HumanVerificationMethodType) => void;
     token: string;
-    mode?: 'signup' | undefined;
     methods: HumanVerificationMethodType[];
     defaultEmail?: string;
     defaultPhone?: string;
 }
 
-const HumanVerificationForm = ({ defaultEmail, defaultPhone, methods, mode, token, onSubmit }: Props) => {
+enum Steps {
+    ENTER_DESTINATION,
+    VERIFY_CODE,
+}
+
+const HumanVerificationForm = ({ defaultEmail, defaultPhone, methods, token, onSubmit }: Props) => {
+    const api = useApi();
+    const { createModal } = useModals();
+    const { createNotification } = useNotifications();
+    const [step, setStep] = useState(Steps.ENTER_DESTINATION);
+
+    const verificationRef = useRef<VerificationModel | undefined>(undefined);
+
+    const sendCode = async (verificationModel: VerificationModel) => {
+        await api(getRoute(verificationModel));
+        setStep(Steps.VERIFY_CODE);
+        const methodTo = verificationModel.value;
+        createNotification({ text: c('Success').t`Code sent to ${methodTo}` });
+    };
+
+    const handleEditDestination = () => {
+        setStep(Steps.ENTER_DESTINATION);
+    };
+
+    const handleResend = async () => {
+        if (!verificationRef.current) {
+            throw new Error('Missing state');
+        }
+        return sendCode(verificationRef.current);
+    };
+
+    const verifyToken = async (token: string, tokenType: 'sms' | 'email') => {
+        try {
+            await onSubmit(token, tokenType);
+        } catch (error) {
+            const { data: { Code } = { Code: 0 } } = error;
+
+            if (Code === API_CUSTOM_ERROR_CODES.TOKEN_INVALID) {
+                createModal(<InvalidVerificationCodeModal onEdit={handleEditDestination} onResend={handleResend} />);
+            }
+        }
+    };
+
     const tabs = [
         methods.includes('captcha') && {
             method: 'captcha',
@@ -35,14 +85,20 @@ const HumanVerificationForm = ({ defaultEmail, defaultPhone, methods, mode, toke
             content: (
                 <>
                     <p>
-                        <span>{c('Info').t`Your email will only be used for this one-time verification.`}</span>
+                        <span>{c('Info').t`Your email will only be used for this one-time verification.`} </span>
                         <LearnMore url="https://protonmail.com/support/knowledge-base/human-verification/" />
                     </p>
-                    <CodeVerification
-                        email={defaultEmail}
-                        mode={mode}
-                        onSubmit={(token) => onSubmit(token, 'email')}
-                        method="email"
+                    <EmailMethodForm
+                        api={api}
+                        defaultEmail={defaultEmail || verificationRef.current?.value}
+                        onSubmit={async (email) => {
+                            verificationRef.current = {
+                                method: 'email',
+                                value: email,
+                            };
+                            await sendCode(verificationRef.current);
+                            setStep(Steps.VERIFY_CODE);
+                        }}
                     />
                 </>
             ),
@@ -56,12 +112,17 @@ const HumanVerificationForm = ({ defaultEmail, defaultPhone, methods, mode, toke
                         <span>{c('Info').t`Your phone number will only be used for this one-time verification.`} </span>
                         <LearnMore url="https://protonmail.com/support/knowledge-base/human-verification/" />
                     </p>
-
-                    <CodeVerification
-                        phone={defaultPhone}
-                        mode={mode}
-                        onSubmit={(token) => onSubmit(token, 'sms')}
-                        method="sms"
+                    <PhoneMethodForm
+                        onSubmit={async (phone) => {
+                            verificationRef.current = {
+                                method: 'sms',
+                                value: phone,
+                            };
+                            await sendCode(verificationRef.current);
+                            setStep(Steps.VERIFY_CODE);
+                        }}
+                        defaultPhone={defaultPhone || verificationRef.current?.value}
+                        api={api}
                     />
                 </>
             ),
@@ -77,6 +138,26 @@ const HumanVerificationForm = ({ defaultEmail, defaultPhone, methods, mode, toke
 
     if (tabs.length === 0) {
         return <Alert type="error">{c('Human verification method').t`No verification method available`}</Alert>;
+    }
+
+    const verificationModel = verificationRef.current;
+
+    if (step === Steps.VERIFY_CODE && verificationModel) {
+        return (
+            <VerifyCodeForm
+                verification={verificationModel}
+                onSubmit={verifyToken}
+                onNoReceive={() => {
+                    createModal(
+                        <RequestNewCodeModal
+                            onEdit={handleEditDestination}
+                            onResend={handleResend}
+                            verificationModel={verificationModel}
+                        />
+                    );
+                }}
+            />
+        );
     }
 
     return <Tabs tabs={tabs} value={index} onChange={setIndex} />;
