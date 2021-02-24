@@ -1,11 +1,11 @@
 import React from 'react';
-import PropTypes from 'prop-types';
 import { CURRENCIES, DEFAULT_CURRENCY } from 'proton-shared/lib/constants';
 import { c } from 'ttag';
 import { Select, Group, ButtonGroup } from '../../components';
 import { classnames } from '../../helpers';
+import { Currency } from './interface';
 
-const addSymbol = (currency) => {
+const addSymbol = (currency: Currency) => {
     if (currency === 'EUR') {
         return `€ ${currency}`;
     }
@@ -17,9 +17,14 @@ const addSymbol = (currency) => {
     return currency;
 };
 
-const CurrencySelector = ({ currency = DEFAULT_CURRENCY, onSelect, mode = 'select', ...rest }) => {
-    const handleChange = ({ target }) => onSelect(target.value);
-    const options = CURRENCIES.map((c) => ({ text: c, value: c }));
+interface Props {
+    mode?: 'buttons' | 'select';
+    currency: Currency;
+    onSelect: (currency: Currency) => void;
+}
+
+const CurrencySelector = ({ currency = DEFAULT_CURRENCY, onSelect, mode = 'select', ...rest }: Props) => {
+    const options = CURRENCIES.map<{ text: Currency; value: Currency }>((c) => ({ text: c, value: c }));
 
     if (mode === 'buttons') {
         return (
@@ -45,19 +50,15 @@ const CurrencySelector = ({ currency = DEFAULT_CURRENCY, onSelect, mode = 'selec
                 title={c('Title').t`Currency`}
                 value={currency}
                 options={options.map((option) => ({ ...option, text: addSymbol(option.text) }))}
-                onChange={handleChange}
+                onChange={({ target }) => {
+                    onSelect(target.value as Currency);
+                }}
                 {...rest}
             />
         );
     }
 
     return null;
-};
-
-CurrencySelector.propTypes = {
-    mode: PropTypes.oneOf(['select', 'buttons']),
-    currency: PropTypes.string,
-    onSelect: PropTypes.func.isRequired,
 };
 
 export default CurrencySelector;
