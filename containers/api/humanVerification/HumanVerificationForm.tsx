@@ -4,9 +4,8 @@ import isTruthy from 'proton-shared/lib/helpers/isTruthy';
 import { HumanVerificationMethodType } from 'proton-shared/lib/interfaces';
 import { API_CUSTOM_ERROR_CODES } from 'proton-shared/lib/errors';
 
-import { Alert, LearnMore, Tabs } from '../../../components';
+import { Alert, Href, LearnMore, Tabs } from '../../../components';
 import Captcha from './Captcha';
-import RequestInvite from './RequestInvite';
 import EmailMethodForm from './EmailMethodForm';
 import useApi from '../../../hooks/useApi';
 import PhoneMethodForm from './PhoneMethodForm';
@@ -29,6 +28,10 @@ enum Steps {
     ENTER_DESTINATION,
     VERIFY_CODE,
 }
+
+const Text = ({ children }: { children: React.ReactNode }) => {
+    return <div className="mb2 mt0-5">{children}</div>;
+};
 
 const HumanVerificationForm = ({ defaultEmail, defaultPhone, methods, token, onSubmit }: Props) => {
     const api = useApi();
@@ -74,7 +77,7 @@ const HumanVerificationForm = ({ defaultEmail, defaultPhone, methods, token, onS
             title: c('Human verification method').t`CAPTCHA`,
             content: (
                 <>
-                    <p>{c('Info').t`To fight spam and abuse, please verify you are human.`}</p>
+                    <Text>{c('Info').t`To fight spam and abuse, please verify you are human.`}</Text>
                     <Captcha token={token} onSubmit={(token) => onSubmit(token, 'captcha')} />
                 </>
             ),
@@ -84,10 +87,10 @@ const HumanVerificationForm = ({ defaultEmail, defaultPhone, methods, token, onS
             title: c('Human verification method').t`Email`,
             content: (
                 <>
-                    <p>
+                    <Text>
                         <span>{c('Info').t`Your email will only be used for this one-time verification.`} </span>
                         <LearnMore url="https://protonmail.com/support/knowledge-base/human-verification/" />
-                    </p>
+                    </Text>
                     <EmailMethodForm
                         api={api}
                         defaultEmail={defaultEmail || verificationRef.current?.value}
@@ -108,10 +111,10 @@ const HumanVerificationForm = ({ defaultEmail, defaultPhone, methods, token, onS
             title: c('Human verification method').t`SMS`,
             content: (
                 <>
-                    <p>
+                    <Text>
                         <span>{c('Info').t`Your phone number will only be used for this one-time verification.`} </span>
                         <LearnMore url="https://protonmail.com/support/knowledge-base/human-verification/" />
-                    </p>
+                    </Text>
                     <PhoneMethodForm
                         onSubmit={async (phone) => {
                             verificationRef.current = {
@@ -130,7 +133,13 @@ const HumanVerificationForm = ({ defaultEmail, defaultPhone, methods, token, onS
         methods.includes('invite') && {
             method: 'invite',
             title: c('Human verification method').t`Manual verification`,
-            content: <RequestInvite />,
+            content: (
+                <Text>
+                    {c('Info')
+                        .t`If you are having trouble creating your account, please request an invitation and we will respond within one business day.`}{' '}
+                    <Href url="https://protonmail.com/support-form">{c('Link').t`Request an invite`}</Href>
+                </Text>
+            ),
         },
     ].filter(isTruthy);
 

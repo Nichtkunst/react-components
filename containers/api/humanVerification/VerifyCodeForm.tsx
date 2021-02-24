@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { noop } from 'proton-shared/lib/helpers/function';
 import { isNumber } from 'proton-shared/lib/helpers/validators';
 import { numberValidator, requiredValidator } from 'proton-shared/lib/helpers/formValidators';
-import { FormField, Button, useFormErrors, InputTwo, LinkButton } from '../../../components';
+import { FormField, Button, useFormErrors, InputTwo } from '../../../components';
 import { useLoading } from '../../../hooks';
 import { VerificationModel } from './interface';
 import { getFormattedCode } from './helper';
@@ -40,7 +40,7 @@ const VerifyCodeForm = ({ onSubmit, onNoReceive, verification }: Props) => {
 
     return (
         <>
-            <div className="mt0-5 mb0-5">
+            <div className="mb2">
                 {c('Info').jt`Enter the verification code that was sent to ${destinationText}.`}{' '}
                 {verification.method === 'email'
                     ? c('Info').t`If you don't find the email in your inbox, please check your spam folder.`
@@ -72,23 +72,31 @@ const VerifyCodeForm = ({ onSubmit, onNoReceive, verification }: Props) => {
                     }}
                 />
             </FormField>
-            <Button
-                size="large"
-                color="norm"
-                type="button"
-                className="w100"
-                loading={loading}
-                onClick={() => {
-                    withLoading(handleSubmit()).catch(noop);
-                }}
-            >{c('Action').t`Verify`}</Button>
-            <div className="text-center">
-                <LinkButton
+            <div className="mt1">
+                <Button
+                    size="large"
+                    color="norm"
+                    type="button"
+                    className="w100"
+                    loading={loading}
+                    onClick={() => {
+                        withLoading(handleSubmit()).catch(noop);
+                    }}
+                >{c('Action').t`Verify`}</Button>
+            </div>
+            <div className="mt0-25">
+                <Button
+                    size="large"
+                    color="norm"
+                    type="button"
+                    shape="ghost"
+                    className="w100"
+                    disabled={loading}
                     onClick={() => {
                         setters.code?.('');
                         onNoReceive();
                     }}
-                >{c('Action').t`Did not receive the code?`}</LinkButton>
+                >{c('Action').t`Did not receive the code?`}</Button>
             </div>
         </>
     );

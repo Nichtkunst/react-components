@@ -5,6 +5,7 @@ import { Api } from 'proton-shared/lib/interfaces';
 import { validateEmail } from 'proton-shared/lib/api/core/validate';
 import { getApiErrorMessage } from 'proton-shared/lib/api/helpers/apiErrorHelper';
 import { requiredValidator } from 'proton-shared/lib/helpers/formValidators';
+
 import { FormField, InputTwo, Button, useFormErrors } from '../../../components';
 import { useLoading } from '../../../hooks';
 
