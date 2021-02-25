@@ -1,6 +1,6 @@
 import React from 'react';
 import { c } from 'ttag';
-import { FormModal, Button } from '../../../components';
+import { FormModal } from '../../../components';
 import { useLoading } from '../../../hooks';
 
 interface Props {
@@ -24,37 +24,17 @@ const InvalidVerificationCodeModal = ({
             loading={loading}
             title={c('Title').t`Invalid verification code`}
             small
-            hasConfirmFirst
-            submit={
-                <Button
-                    size="large"
-                    color="norm"
-                    type="button"
-                    className="w100"
-                    loading={loading}
-                    onClick={async () => {
-                        await withLoading(onResend());
-                        rest.onClose?.();
-                    }}
-                >
-                    {request}
-                </Button>
-            }
-            close={
-                <Button
-                    size="large"
-                    color="weak"
-                    type="button"
-                    className="w100"
-                    loading={loading}
-                    onClick={async () => {
-                        rest.onClose?.();
-                        onEdit();
-                    }}
-                >
-                    {edit}
-                </Button>
-            }
+            mode="alert"
+            onSubmit={async () => {
+                await withLoading(onResend());
+                rest.onClose?.();
+            }}
+            submit={request}
+            onClose={() => {
+                rest.onClose?.();
+                onEdit();
+            }}
+            close={edit}
             {...rest}
         >
             {c('Info').t`Would you like to receive a new verification code or use an alternative verification method?`}

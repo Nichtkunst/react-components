@@ -7,8 +7,7 @@ import DialogModal from './Dialog';
 import HeaderModal from './Header';
 import ContentModal from './Content';
 import InnerModal from './Inner';
-import { ResetButton, PrimaryButton } from '../button';
-import { classnames } from '../../helpers';
+import { ResetButton, PrimaryButton, Button } from '../button';
 
 /** @type any */
 const Modal = ({
@@ -25,7 +24,7 @@ const Modal = ({
     hasClose = true,
     displayTitle = true,
     noValidate = false,
-    hasConfirmFirst = false,
+    mode = '',
     // Destructure these options so they are not passed to the DOM.
     // eslint-disable-next-line no-unused-vars,@typescript-eslint/no-unused-vars
     disableCloseOnLocation,
@@ -53,13 +52,30 @@ function DemoModal({ onAdd, ...rest }) {
 `);
     }
 
+    const isAlertMode = mode === 'alert';
+
     const getFooter = () => {
         if (footer === null) {
             return null;
         }
 
         if (footer) {
-            return <FooterModal hasConfirmFirst={hasConfirmFirst}>{footer}</FooterModal>;
+            return <FooterModal isColumn={isAlertMode}>{footer}</FooterModal>;
+        }
+
+        if (isAlertMode) {
+            return (
+                <FooterModal isColumn>
+                    <Button size="large" color="norm" type="button" fullWidth loading={loading} onClick={onSubmit}>
+                        {submit}
+                    </Button>
+                    {close ? (
+                        <Button size="large" color="weak" type="button" onClick={onClose} fullWidth>
+                            {close}
+                        </Button>
+                    ) : null}
+                </FooterModal>
+            );
         }
 
         const nodeSubmit =
@@ -73,11 +89,7 @@ function DemoModal({ onAdd, ...rest }) {
         const submitBtn = hasSubmit ? nodeSubmit : null;
         const cancelBtn =
             typeof close === 'string' ? (
-                <ResetButton
-                    className={classnames([hasConfirmFirst && 'button--link'])}
-                    disabled={loading}
-                    data-focus-fallback="-2"
-                >
+                <ResetButton disabled={loading} data-focus-fallback="-2">
                     {close}
                 </ResetButton>
             ) : (
@@ -85,18 +97,9 @@ function DemoModal({ onAdd, ...rest }) {
             );
 
         return (
-            <FooterModal hasConfirmFirst={hasConfirmFirst}>
-                {hasConfirmFirst ? (
-                    <>
-                        {submitBtn}
-                        {cancelBtn}
-                    </>
-                ) : (
-                    <>
-                        {cancelBtn}
-                        {submitBtn}
-                    </>
-                )}
+            <FooterModal>
+                {cancelBtn}
+                {submitBtn}
             </FooterModal>
         );
     };
@@ -107,6 +110,7 @@ function DemoModal({ onAdd, ...rest }) {
             modalTitleID={modalTitleID}
             disableCloseOnOnEscape={disableCloseOnOnEscape || loading}
             {...rest}
+            {...(isAlertMode ? { small: true } : {})}
         >
             <HeaderModal hasClose={hasClose} displayTitle={displayTitle} modalTitleID={modalTitleID} onClose={onClose}>
                 {title}
@@ -134,11 +138,11 @@ Modal.propTypes = {
     submit: PropTypes.node,
     close: PropTypes.node,
     noValidate: PropTypes.bool,
+    mode: PropTypes.string,
     small: PropTypes.bool,
     background: PropTypes.bool,
     hasSubmit: PropTypes.bool,
     hasClose: PropTypes.bool,
-    hasConfirmFirst: PropTypes.bool,
     disableCloseOnLocation: PropTypes.bool,
     disableCloseOnOnEscape: PropTypes.bool,
 };

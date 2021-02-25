@@ -3,15 +3,15 @@ import { classnames } from '../../helpers';
 
 interface Props extends React.ComponentPropsWithoutRef<'footer'> {
     children?: React.ReactNode;
-    hasConfirmFirst?: boolean;
+    isColumn?: boolean;
 }
 
 const Footer = ({
     children,
-    hasConfirmFirst,
+    isColumn,
     className = classnames([
         'flex flex-nowrap',
-        hasConfirmFirst ? 'flex-column' : 'flex-justify-space-between flex-align-items-center',
+        isColumn ? 'flex-column' : 'flex-justify-space-between flex-align-items-center',
     ]),
     ...rest
 }: Props) => {

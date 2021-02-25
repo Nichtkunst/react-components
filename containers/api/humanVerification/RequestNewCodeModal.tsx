@@ -1,7 +1,7 @@
 import React from 'react';
 import { c } from 'ttag';
 
-import { FormModal, Button } from '../../../components';
+import { FormModal } from '../../../components';
 import { useLoading } from '../../../hooks';
 import { VerificationModel } from './interface';
 
@@ -19,35 +19,21 @@ const RequestNewCodeModal = ({ verificationModel, onEdit, onResend, ...rest }: P
     return (
         <FormModal
             title={c('Title').t`Request new verification code`}
-            small
-            hasConfirmFirst
-            submit={
-                <Button
-                    size="large"
-                    color="norm"
-                    type="button"
-                    className="w100"
-                    loading={loading}
-                    onClick={async () => {
-                        await withLoading(onResend());
-                        rest.onClose?.();
-                    }}
-                >{c('Action').t`Request new code`}</Button>
-            }
+            mode="alert"
+            loading={loading}
+            onSubmit={async () => {
+                await withLoading(onResend());
+                rest.onClose?.();
+            }}
+            submit={c('Action').t`Request new code`}
+            onClose={() => {
+                rest.onClose?.();
+                onEdit();
+            }}
             close={
-                <Button
-                    size="large"
-                    color="weak"
-                    type="button"
-                    onClick={() => {
-                        rest.onClose?.();
-                        onEdit();
-                    }}
-                >
-                    {verificationModel.method === 'email'
-                        ? c('Action').t`Edit email address`
-                        : c('Action').t`Edit phone number`}
-                </Button>
+                verificationModel.method === 'email'
+                    ? c('Action').t`Edit email address`
+                    : c('Action').t`Edit phone number`
             }
             {...rest}
         >
