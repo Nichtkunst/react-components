@@ -25,6 +25,7 @@ import { traceError } from 'proton-shared/lib/helpers/sentry';
 import { getMember } from 'proton-shared/lib/api/members';
 import { getApiErrorMessage } from 'proton-shared/lib/api/helpers/apiErrorHelper';
 import { handleSetupAddressKeys } from 'proton-shared/lib/keys/setupAddressKeys';
+import { wait } from 'proton-shared/lib/helpers/promise';
 
 import { getAuthTypes, handleUnlockKey } from './loginHelper';
 import { AuthActionResponse, AuthCacheResult, AuthStep } from './interface';
@@ -158,6 +159,8 @@ export const handleUnlock = async ({
     }
 
     const [User, KeySalts] = userSaltResult;
+
+    await wait(500);
 
     const result = await handleUnlockKey(User, KeySalts, clearKeyPassword).catch(() => undefined);
     if (!result) {
