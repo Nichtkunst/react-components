@@ -28,6 +28,7 @@ export interface Props
     errorTimeout?: number;
     challengeTimeout?: number;
 }
+
 const ChallengeFrame = ({
     type,
     onLoaded,
@@ -53,11 +54,17 @@ const ChallengeFrame = ({
     }, [src]);
 
     useLayoutEffect(() => {
+        let isMounted = true;
+        let callbackHandle: number | undefined;
+
         renderDivRef.current = document.createElement('DIV') as HTMLDivElement;
 
         let error = false;
         const handleError = () => {
             error = true;
+            if (!isMounted) {
+                return;
+            }
             onError?.();
         };
         let errorTimeoutHandle = window.setTimeout(handleError, errorTimeout);
@@ -81,8 +88,17 @@ const ChallengeFrame = ({
 
         const handleInitDone = () => {
             clearTimeout(errorTimeoutHandle);
+            if (!isMounted) {
+                return;
+            }
             setIsLoaded(true);
-            onLoaded?.();
+            callbackHandle = window.setTimeout(() => {
+                if (!isMounted) {
+                    return;
+                }
+                onLoaded?.();
+                // Small timeout to let the iframe render and improve layout shift
+            }, 50);
         };
 
         const handleAssetLoaded = () => {
@@ -228,6 +244,8 @@ const ChallengeFrame = ({
         return () => {
             window.removeEventListener('message', cb);
             clearTimeout(errorTimeoutHandle);
+            clearTimeout(callbackHandle);
+            isMounted = false;
         };
     }, []);
 
