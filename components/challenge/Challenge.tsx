@@ -22,7 +22,7 @@ const Challenge = ({
     const [errorRetry, setErrorRetry] = useState(0);
 
     const supportTeam = (
-        <Href url="https://protonmail.com/support-form" title="Contact the ProtonMail support team.">
+        <Href key="support" url="https://protonmail.com/support-form" title="Contact the ProtonMail support team.">
             {c('Info').t`support team`}
         </Href>
     );
@@ -64,8 +64,7 @@ const Challenge = ({
                     key={errorRetry}
                     src={challengeSrc}
                     errorTimeout={errorTimeout}
-                    className={isLoading || hasError ? 'hidden' : 'w100'}
-                    innerClassName="flex-item-fluid-auto"
+                    className="w100"
                     bodyClassName={classnames(['color-black bg-white', bodyClassName])}
                     style={style}
                     onLoaded={() => {

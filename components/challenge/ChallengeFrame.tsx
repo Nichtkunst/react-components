@@ -5,6 +5,7 @@ import { getChallengeURL, handleEvent, normalizeSelectOptions } from './challeng
 
 export const ERROR_TIMEOUT_MS = 15000;
 export const CHALLENGE_TIMEOUT_MS = 9000;
+export const LAYOUT_SHIFT_TIMEOUT_MS = 50;
 
 export type ChallengeResult = { [key: string]: string } | undefined;
 
@@ -98,7 +99,7 @@ const ChallengeFrame = ({
                 }
                 onLoaded?.();
                 // Small timeout to let the iframe render and improve layout shift
-            }, 50);
+            }, LAYOUT_SHIFT_TIMEOUT_MS);
         };
 
         const handleAssetLoaded = () => {
