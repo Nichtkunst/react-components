@@ -18,6 +18,7 @@ const addSymbol = (currency: Currency) => {
 };
 
 interface Props {
+    id?: string;
     mode?: 'buttons' | 'select';
     currency: Currency;
     onSelect: (currency: Currency) => void;
