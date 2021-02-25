@@ -40,6 +40,7 @@ const HumanVerificationForm = ({ defaultEmail, defaultPhone, methods, token, onS
     const [step, setStep] = useState(Steps.ENTER_DESTINATION);
 
     const verificationRef = useRef<VerificationModel | undefined>(undefined);
+    const verificationModel = verificationRef.current;
 
     const sendCode = async (verificationModel: VerificationModel) => {
         await api(getRoute(verificationModel));
@@ -93,7 +94,10 @@ const HumanVerificationForm = ({ defaultEmail, defaultPhone, methods, token, onS
                     </Text>
                     <EmailMethodForm
                         api={api}
-                        defaultEmail={defaultEmail || verificationRef.current?.value}
+                        defaultEmail={
+                            defaultEmail ||
+                            (verificationModel && verificationModel.method === 'email' ? verificationModel.value : '')
+                        }
                         onSubmit={async (email) => {
                             verificationRef.current = {
                                 method: 'email',
@@ -124,7 +128,10 @@ const HumanVerificationForm = ({ defaultEmail, defaultPhone, methods, token, onS
                             await sendCode(verificationRef.current);
                             setStep(Steps.VERIFY_CODE);
                         }}
-                        defaultPhone={defaultPhone || verificationRef.current?.value}
+                        defaultPhone={
+                            defaultPhone ||
+                            (verificationModel && verificationModel.method === 'sms' ? verificationModel.value : '')
+                        }
                         api={api}
                     />
                 </>
@@ -148,8 +155,6 @@ const HumanVerificationForm = ({ defaultEmail, defaultPhone, methods, token, onS
     if (tabs.length === 0) {
         return <Alert type="error">{c('Human verification method').t`No verification method available`}</Alert>;
     }
-
-    const verificationModel = verificationRef.current;
 
     if (step === Steps.VERIFY_CODE && verificationModel) {
         return (
