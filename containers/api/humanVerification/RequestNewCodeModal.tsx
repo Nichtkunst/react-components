@@ -26,15 +26,17 @@ const RequestNewCodeModal = ({ verificationModel, onEdit, onResend, ...rest }: P
                 rest.onClose?.();
             }}
             submit={c('Action').t`Request new code`}
-            onClose={() => {
-                rest.onClose?.();
-                onEdit();
-            }}
             close={
                 verificationModel.method === 'email'
                     ? c('Action').t`Edit email address`
                     : c('Action').t`Edit phone number`
             }
+            closeProps={{
+                onClick: () => {
+                    rest.onClose?.();
+                    onEdit();
+                },
+            }}
             {...rest}
         >
             {verificationModel.method === 'email'

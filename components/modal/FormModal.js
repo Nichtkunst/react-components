@@ -29,6 +29,8 @@ const Modal = ({
     // eslint-disable-next-line no-unused-vars,@typescript-eslint/no-unused-vars
     disableCloseOnLocation,
     disableCloseOnOnEscape,
+    submitProps,
+    closeProps,
     ...rest
 }) => {
     // Because we will forget
@@ -66,11 +68,29 @@ function DemoModal({ onAdd, ...rest }) {
         if (isAlertMode) {
             return (
                 <FooterModal isColumn>
-                    <Button size="large" color="norm" type="button" fullWidth loading={loading} onClick={onSubmit}>
+                    <Button
+                        size="large"
+                        color="norm"
+                        type="button"
+                        fullWidth
+                        loading={loading}
+                        onClick={onSubmit}
+                        data-focus-fallback="-1"
+                        {...submitProps}
+                    >
                         {submit}
                     </Button>
                     {close ? (
-                        <Button size="large" color="weak" type="button" onClick={onClose} fullWidth>
+                        <Button
+                            size="large"
+                            color="weak"
+                            type="button"
+                            onClick={onClose}
+                            disabled={loading}
+                            fullWidth
+                            data-focus-fallback="-2"
+                            {...closeProps}
+                        >
                             {close}
                         </Button>
                     ) : null}

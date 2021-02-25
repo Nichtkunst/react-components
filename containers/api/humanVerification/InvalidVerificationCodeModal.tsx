@@ -35,6 +35,12 @@ const InvalidVerificationCodeModal = ({
                 onEdit();
             }}
             close={edit}
+            closeProps={{
+                onClick: () => {
+                    rest.onClose?.();
+                    onEdit();
+                },
+            }}
             {...rest}
         >
             {c('Info').t`Would you like to receive a new verification code or use an alternative verification method?`}
