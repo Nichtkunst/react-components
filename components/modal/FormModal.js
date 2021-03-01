@@ -132,7 +132,13 @@ function DemoModal({ onAdd, ...rest }) {
             {...rest}
             {...(isAlertMode ? { small: true } : {})}
         >
-            <HeaderModal hasClose={hasClose} displayTitle={displayTitle} modalTitleID={modalTitleID} onClose={onClose}>
+            <HeaderModal
+                hasClose={hasClose}
+                displayTitle={displayTitle}
+                modalTitleID={modalTitleID}
+                onClose={onClose}
+                {...(isAlertMode ? { hasClose: false } : {})}
+            >
                 {title}
             </HeaderModal>
             <ContentModal
