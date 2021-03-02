@@ -11,10 +11,11 @@ import { useLoading } from '../../../hooks';
 interface Props {
     onSubmit: (phone: string) => Promise<void>;
     defaultPhone?: string;
+    defaultCountry?: string;
     api: Api;
 }
 
-const EmailMethodForm = ({ api, onSubmit, defaultPhone = '' }: Props) => {
+const EmailMethodForm = ({ api, onSubmit, defaultPhone = '', defaultCountry }: Props) => {
     const [phone, setPhone] = useState(defaultPhone);
     const [loading, withLoading] = useLoading();
 
@@ -51,6 +52,7 @@ const EmailMethodForm = ({ api, onSubmit, defaultPhone = '' }: Props) => {
                     inputClassName="w100 inputfield-field"
                     dropdownContainer="body"
                     useNewFormStyle
+                    defaultCountry={defaultCountry}
                     autoFocus
                     onPhoneNumberChange={(status: any, value: any, countryData: any, number: string) =>
                         setters.phone?.(number)

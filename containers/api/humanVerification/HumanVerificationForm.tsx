@@ -16,14 +16,6 @@ import InvalidVerificationCodeModal from './InvalidVerificationCodeModal';
 import VerifyCodeForm from './VerifyCodeForm';
 import RequestNewCodeModal from './RequestNewCodeModal';
 
-interface Props {
-    onSubmit: (token: string, tokenType: HumanVerificationMethodType) => void;
-    token: string;
-    methods: HumanVerificationMethodType[];
-    defaultEmail?: string;
-    defaultPhone?: string;
-}
-
 enum Steps {
     ENTER_DESTINATION,
     VERIFY_CODE,
@@ -33,7 +25,16 @@ const Text = ({ children }: { children: React.ReactNode }) => {
     return <div className="mb2 mt0-5">{children}</div>;
 };
 
-const HumanVerificationForm = ({ defaultEmail, defaultPhone, methods, token, onSubmit }: Props) => {
+interface Props {
+    onSubmit: (token: string, tokenType: HumanVerificationMethodType) => void;
+    token: string;
+    methods: HumanVerificationMethodType[];
+    defaultEmail?: string;
+    defaultPhone?: string;
+    defaultCountry?: string;
+}
+
+const HumanVerificationForm = ({ defaultCountry, defaultEmail, defaultPhone, methods, token, onSubmit }: Props) => {
     const api = useApi();
     const { createModal } = useModals();
     const { createNotification } = useNotifications();
@@ -120,6 +121,7 @@ const HumanVerificationForm = ({ defaultEmail, defaultPhone, methods, token, onS
                         <LearnMore url="https://protonmail.com/support/knowledge-base/human-verification/" />
                     </Text>
                     <PhoneMethodForm
+                        defaultCountry={defaultCountry}
                         onSubmit={async (phone) => {
                             verificationRef.current = {
                                 method: 'sms',
