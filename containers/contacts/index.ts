@@ -9,3 +9,8 @@ export { default as ContactPgpSettings } from './ContactPgpSettings';
 export { default as ContactGroupDropdown } from './ContactGroupDropdown';
 export { default as ContactDeleteModal } from './modals/ContactDeleteModal';
 export { default as ContactProvider } from './ContactProvider';
+export { default as ContactsSettingsExportSection } from './settings/ExportSection';
+export { default as ContactsSettingsImportSection } from './settings/ImportSection';
+export { default as ContactsSettingsContactsSection } from './settings/ContactsSection';
+export { default as ContactsSettingsGroupsSection } from './settings/ContactGroupsSection';
+export { default as ContactsExportModal } from './settings/ExportModal';
