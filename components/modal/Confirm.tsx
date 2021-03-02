@@ -11,6 +11,7 @@ export interface ConfirmModalProps {
     confirm?: ReactNode;
     loading?: boolean;
     small?: boolean;
+    tiny?: boolean;
     mode?: 'alert';
 }
 const Confirm = ({
@@ -20,7 +21,8 @@ const Confirm = ({
     title = c('Action').t`Confirm`,
     cancel = c('Action').t`Cancel`,
     confirm = c('Action').t`Confirm`,
-    small = true,
+    small = false,
+    tiny = true,
     ...rest
 }: ConfirmModalProps) => {
     return (
@@ -34,6 +36,7 @@ const Confirm = ({
             close={cancel}
             submit={confirm}
             small={small}
+            tiny={tiny}
             {...rest}
         >
             {children}
