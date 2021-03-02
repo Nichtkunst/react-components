@@ -56,6 +56,7 @@ interface Props {
 }
 
 interface Model {
+    step: SUBSCRIPTION_STEPS;
     planIDs: PlanIDs;
     currency: Currency;
     cycle: Cycle;
@@ -64,7 +65,7 @@ interface Model {
 }
 
 const NewSubscriptionModal = ({
-    step: initialStep = SUBSCRIPTION_STEPS.PLAN_SELECTION,
+    step = SUBSCRIPTION_STEPS.PLAN_SELECTION,
     cycle = DEFAULT_CYCLE,
     currency = DEFAULT_CURRENCY,
     coupon,
@@ -98,12 +99,12 @@ const NewSubscriptionModal = ({
     const { Code: couponCode } = checkResult?.Coupon || {}; // Coupon can be null
     const creditsRemaining = (user.Credit + (checkResult?.Credit || 0)) / 100;
     const [model, setModel] = useState<Model>({
+        step,
         cycle,
         currency,
         coupon,
         planIDs,
     });
-    const [step, setStep] = useState(initialStep);
 
     const TOTAL_ZERO = {
         Amount: 0,
@@ -136,7 +137,7 @@ const NewSubscriptionModal = ({
         }
 
         try {
-            setStep(SUBSCRIPTION_STEPS.UPGRADE);
+            setModel({ ...model, step: SUBSCRIPTION_STEPS.UPGRADE });
             await api(
                 subscribe({
                     PlanIDs: clearPlanIDs(model.planIDs),
@@ -146,7 +147,7 @@ const NewSubscriptionModal = ({
                 })
             );
             await call();
-            setStep(SUBSCRIPTION_STEPS.THANKS);
+            setModel({ ...model, step: SUBSCRIPTION_STEPS.THANKS });
         } catch (error) {
             const { Code = 0 } = error.data || {};
 
@@ -154,7 +155,7 @@ const NewSubscriptionModal = ({
                 await check(); // eslint-disable-line @typescript-eslint/no-use-before-define
                 createNotification({ text: c('Error').t`Checkout expired, please try again.`, type: 'error' });
             }
-            setStep(SUBSCRIPTION_STEPS.CHECKOUT);
+            setModel({ ...model, step: SUBSCRIPTION_STEPS.CHECKOUT });
             throw error;
         }
     };
@@ -201,7 +202,7 @@ const NewSubscriptionModal = ({
             setCheckResult(result);
         } catch (error) {
             if (error.name === 'OfflineError') {
-                setStep(SUBSCRIPTION_STEPS.NETWORK_ERROR);
+                setModel({ ...model, step: SUBSCRIPTION_STEPS.NETWORK_ERROR });
             }
             if (step === SUBSCRIPTION_STEPS.CUSTOMIZATION) {
                 if (newModel.gift && newModel.gift !== model.gift) {
@@ -217,7 +218,7 @@ const NewSubscriptionModal = ({
 
     const handleCheckout = async () => {
         if (step === SUBSCRIPTION_STEPS.CUSTOMIZATION) {
-            return setStep(SUBSCRIPTION_STEPS.CHECKOUT);
+            return setModel({ ...model, step: SUBSCRIPTION_STEPS.CHECKOUT });
         }
 
         const params = await handlePaymentToken({
@@ -235,7 +236,7 @@ const NewSubscriptionModal = ({
 
     const handleClose = (e: any) => {
         if (step === SUBSCRIPTION_STEPS.CHECKOUT) {
-            setStep(SUBSCRIPTION_STEPS.CUSTOMIZATION);
+            setModel({ ...model, step: SUBSCRIPTION_STEPS.CUSTOMIZATION });
             return;
         }
 
@@ -261,7 +262,11 @@ const NewSubscriptionModal = ({
             footer={null}
             className={classnames([
                 'subscription-modal',
-                [SUBSCRIPTION_STEPS.CUSTOMIZATION, SUBSCRIPTION_STEPS.CHECKOUT].includes(step) && 'modal--full',
+                [
+                    SUBSCRIPTION_STEPS.PLAN_SELECTION,
+                    SUBSCRIPTION_STEPS.CUSTOMIZATION,
+                    SUBSCRIPTION_STEPS.CHECKOUT,
+                ].includes(step) && 'modal--full',
                 user.isFree && 'is-free-user',
             ])}
             title={TITLE[step]}
@@ -281,7 +286,9 @@ const NewSubscriptionModal = ({
                     subscription={subscription}
                     organization={organization}
                     service={service}
-                    onChangePlanIDs={(planIDs) => setModel({ ...model, planIDs })}
+                    onChangePlanIDs={(planIDs) =>
+                        setModel({ ...model, planIDs, step: SUBSCRIPTION_STEPS.CUSTOMIZATION })
+                    }
                     onChangeCurrency={(currency) => setModel({ ...model, currency })}
                     onChangeCycle={(cycle) => setModel({ ...model, cycle })}
                 />
@@ -300,7 +307,7 @@ const NewSubscriptionModal = ({
                             service={service}
                             onChangePlanIDs={(planIDs) => setModel({ ...model, planIDs })}
                             onChangeCycle={(cycle) => setModel({ ...model, cycle })}
-                            onBack={() => setStep(SUBSCRIPTION_STEPS.PLAN_SELECTION)}
+                            onBack={() => setModel({ ...model, step: SUBSCRIPTION_STEPS.PLAN_SELECTION })}
                         />
                     </div>
                     <div className="w25 on-mobile-w100">
