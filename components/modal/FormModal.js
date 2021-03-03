@@ -130,7 +130,7 @@ function DemoModal({ onAdd, ...rest }) {
             modalTitleID={modalTitleID}
             disableCloseOnOnEscape={disableCloseOnOnEscape || loading}
             {...rest}
-            {...(isAlertMode ? { small: true } : {})}
+            {...(isAlertMode ? { small: false, tiny: true } : {})}
         >
             <HeaderModal
                 hasClose={hasClose}

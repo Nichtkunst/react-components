@@ -21,8 +21,7 @@ const Confirm = ({
     title = c('Action').t`Confirm`,
     cancel = c('Action').t`Cancel`,
     confirm = c('Action').t`Confirm`,
-    small = false,
-    tiny = true,
+    small = true,
     ...rest
 }: ConfirmModalProps) => {
     return (
@@ -36,7 +35,6 @@ const Confirm = ({
             close={cancel}
             submit={confirm}
             small={small}
-            tiny={tiny}
             {...rest}
         >
             {children}
