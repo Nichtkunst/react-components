@@ -1,16 +1,19 @@
 import React from 'react';
 import { c } from 'ttag';
 
-import { Loader, Button } from '../../components';
-import { useFolders, useModals } from '../../hooks';
+import { Loader, Button, Row, Label, Field, Info } from '../../components';
+import { useFolders, useModals, useMailSettings } from '../../hooks';
 
 import { SettingsSection, SettingsParagraph } from '../account';
 
 import FolderTreeViewList from './FolderTreeViewList';
 import EditLabelModal from './modals/EditLabelModal';
+import ToggleEnableFolderColor from './ToggleEnableFolderColor';
+import ToggleInheritParentFolderColor from './ToggleInheritParentFolderColor';
 
 function LabelsSection() {
     const [folders = [], loadingFolders] = useFolders();
+    const [mailSettings] = useMailSettings();
     const { createModal } = useModals();
 
     return (
@@ -25,6 +28,29 @@ function LabelsSection() {
                     >
                         {c('LabelSettings').t`A message can only be filed in a single Folder at a time.`}
                     </SettingsParagraph>
+                    <Row>
+                        <Label htmlFor="folder-colors" className="text-bold">
+                            {c('Label').t`Use folder colors`}
+                        </Label>
+                        <Field>
+                            <ToggleEnableFolderColor id="folder-colors" />
+                        </Field>
+                    </Row>
+                    {mailSettings?.EnableFolderColor ? (
+                        <Row>
+                            <Label htmlFor="parent-folder-color" className="text-bold">
+                                <span>{c('Label').t`Inherit parent folder color`}</span>
+                                <Info
+                                    buttonClass="ml0-5 inline-flex"
+                                    title={c('Info')
+                                        .t`This feature automates folder coloring. When turned on, sub-folders inherit the color of the first level folder.`}
+                                />
+                            </Label>
+                            <Field>
+                                <ToggleInheritParentFolderColor id="parent-folder-color" />
+                            </Field>
+                        </Row>
+                    ) : null}
                     <div className="mb1">
                         <Button color="norm" onClick={() => createModal(<EditLabelModal type="folder" />)}>
                             {c('Action').t`Add folder`}
